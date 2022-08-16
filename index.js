@@ -7,7 +7,7 @@ import * as BobViews from './views/BobViews';
 import * as backend from './build/index.main.mjs';
 import { ALGO_MyAlgoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 import { loadStdlib } from '@reach-sh/stdlib';
-const reach = loadStdlib(process.env);
+const reach = loadStdlib('ALGO');
 reach.setWalletFallback(reach.walletFallback( { providerEnv: 'TestNet', MyAlgoConnect } ));
 
 const {standardUnit} = reach;
@@ -164,27 +164,29 @@ class Alice extends React.Component {
 class Bob extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {mode: 'RunBackend',  isAlice:false};
+    this.state = {mode: 'RunBackend',  isAlice:false, loading:false};
   }
   resolveGetNumbers(number){
     this.state.getNumbers(number);
   }
 
+  setLoading(loading){
+    this.setState({loading})
+  }
+
   resolveGuessNumbers(number){
     this.state.guessNumbers(number);
     this.setState( {mode: 'WaitingforTurn'});
-
   }
   async runBackend(ctcInfoStr) { // from mode: RunBackend
     try{
       const ctcInfo = JSON.parse(ctcInfoStr);
       const ctc = this.props.acc.contract(backend, ctcInfo);
-      this.setState({mode: 'ApproveRequest'});
       await backend.Bob(ctc, {
         ...player(this),
         acceptWager: (wager)=>{
           return  new Promise(resolveAcceptWager => {
-      this.setState({ mode: 'AcceptWager', wager, resolveAcceptWager });
+      this.setState({ mode: 'AcceptWager', wager, resolveAcceptWager, loading:false});
           });
             },
       });
@@ -196,6 +198,7 @@ class Bob extends React.Component {
   async resolveAcceptWager(){
     this.state.resolveAcceptWager();
     this.setState( {mode: 'WaitingforTurn'});
+    this.setLoading(false);
   };
 
   render() {
