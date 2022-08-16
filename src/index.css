@@ -1,0 +1,76 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+html, body {
+  margin:0px;
+  height:100%;
+}
+
+.app {
+    background-color: #97EAD2;
+  color: #4F5269;
+  height:100%;
+    width: 100vw;
+    height: 100vh;
+}
+
+
+.app-container {
+  margin: 0;
+  position: absolute;
+    width: 100%;
+}
+
+.hcenter{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.vcenter{
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.tcenter{
+  text-align: center;
+}
+
+input{
+  font-size: 16px;
+  width: 64px;
+}
+
+button {
+  background-color: #E3C363;
+  color: black;
+  border-radius: 10px;
+  min-height: 40px;
+  min-width: 130px;
+  font-size: 16px;
+}
+
+textarea {
+  font-size: 16px;
+}
+
+.ContractInfo {
+  font-size: 16px;
+  text-align: left;
+  width: 100%;
+  height: auto;
+  white-space: pre;
+}
+
+
+.flex-grid {
+  display: flex;
+}
+.col {
+ display: inline-flex;
+}

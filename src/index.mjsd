@@ -1,0 +1,127 @@
+import { loadStdlib, ask } from '@reach-sh/stdlib';
+import * as backend from './build/index.main.mjs';
+const stdlib = loadStdlib();
+
+
+console.log("Starting Morra game....")
+console.log("Rules....");
+console.log("1- Each participant will pick a number from 0 - 5 as the number of fingers to play");
+console.log("2- Each participant will pick a number from 0 - 10");
+console.log("if this number match the sum of both participants fingers, the participan get a point");
+console.log("3- You need 3 points to win");
+console.log("4- If the result is tie, the wager will be splited");
+
+
+const isAlice = await ask.ask(
+  `Are you Alice?`,
+  ask.yesno
+);
+const who = isAlice ? 'Alice' : 'Bob';
+
+
+  const acc = await stdlib.newTestAccount(stdlib.parseCurrency(1000));
+let ctc = null;
+if (isAlice) {
+  ctc = acc.contract(backend);
+  ctc.getInfo().then((info) => {
+    console.log(`The contract is deployed as = ${JSON.stringify(info)}`); });
+} else {
+  const info = await ask.ask(
+    `Please paste the contract information:`,
+    JSON.parse
+  );
+  ctc = acc.contract(backend, info);
+}
+
+const fmt = (x) => stdlib.formatCurrency(x, 4);
+const getBalance = async () => fmt(await stdlib.balanceOf(acc));
+
+const before = await getBalance();
+console.log(`Your balance is ${before}`);
+
+const interact = { ...stdlib.hasRandom };
+
+interact.informTimeout = () => {
+  console.log(`There was a timeout.`);
+  process.exit(1);
+};
+
+interact.finishMorra =  (outcome) => {
+    console.log(`outcome ${outcome}`)
+        if(outcome==1){
+            console.log(`Game ended the result is: DRAW`);
+        }else{
+            console.log(`Game ended the result is: ${outcome==3 ? 'Alice won': 'Bob won'}`);
+    
+        }
+    };
+
+interact.informRoundEnd = (total, guess_a, guess_b,a_won, b_won) => {
+    console.log(`Round finished, the total number of finger was : ${total}`);
+    console.log(`Alice ${a_won>0 ? "won 1 point" : "did not won any points"}`);
+    console.log(`Bob ${b_won>0 ? "won 1 point" : "did not won any points"}`);
+  };
+
+interact.guessNumbers = async () => await ask.ask('how many fingers are in total? (1-10), or press Enter for a random number :D ', (s) => {
+    let num = Math.floor(Math.random()*10);
+    if(s){
+        const parsed = parseInt(s,10);
+        if(num >10){
+        console.log(`You cannot pick a number bigger than 10.....`)
+        console.log(`returning a random number instead -> ${num}`)
+        }else{
+            num = parsed;
+        }
+    }
+    console.log(`You guessed -> ${num}`)
+    return num;
+  });
+
+interact.getNumbers = async () => await ask.ask('Please pick a number of fingers to play this round ? (0-5), or press Enter for a random number :D', (s) => {
+    let num = Math.floor(Math.random()*5);
+    if(s){
+        const parsed = parseInt(s,10);
+        if(num >5){
+        console.log(`You cannot pick a number bigger than 5.....`)
+        console.log(`returning a random number instead -> ${num}`)
+        }else{
+            num = parsed;
+        }
+    }
+    console.log(`You played -> ${num}`)
+    return num;
+  });
+
+
+
+if (isAlice) {
+  const amt = await ask.ask(
+    `How much do you want wage?`,
+    stdlib.parseCurrency
+  );
+  console.log('Starting game, waiting for bob to join');
+
+  interact.wager = amt;
+  interact.deadline = { ETH: 100, ALGO: 100, CFX: 1000 }[stdlib.connector];
+} else {
+    interact.acceptWager = async (amt) => {
+        const accepted = await ask.ask(
+          `Do you accept the wager of ${fmt(amt)}for playing morra?`,
+          ask.yesno
+        );
+        if (!accepted) {
+          process.exit(0);
+        }
+      };
+      };
+
+
+
+
+const part = isAlice ? ctc.p.Alice : ctc.p.Bob;
+await part(interact);
+
+const after = await getBalance();
+console.log(`Your balance is now ${after}`);
+
+ask.done();
